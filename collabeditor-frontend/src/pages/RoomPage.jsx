@@ -28,6 +28,31 @@ export default function RoomPage() {
   };
 
   useEffect(() => {
+    // Fetch existing code snapshot before connecting
+    fetch(`http://localhost:8080/api/room-state/${roomId}/code`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.code && data.code.length > 0) {
+          setCode(data.code);
+        }
+      })
+      .catch(err => console.log('No existing code:', err));
+
+    // Fetch existing users in the room
+    fetch(`http://localhost:8080/api/room-state/${roomId}/users`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && Object.keys(data).length > 0) {
+          Object.entries(data).forEach(([uid, uname]) => {
+            if (!usersRef.current.has(uid)) {
+              usersRef.current.set(uid, uname);
+            }
+          });
+          setConnectedUsers(Array.from(usersRef.current.values()));
+        }
+      })
+      .catch(err => console.log('No existing users:', err));
+
     const onMessageReceived = (message) => {
       // Detect join message (empty content, version 0)
       if (message.content === '' && message.version === 0) {
@@ -74,7 +99,12 @@ export default function RoomPage() {
       }
     };
 
-    connectToRoom(roomId, userId, username, onMessageReceived, onConnected);
+    connectToRoom(
+      roomId, userId, username,
+      onMessageReceived,
+      onConnected,
+      () => setConnectionStatus('disconnected')
+    );
 
     return () => {
       disconnectFromRoom();
@@ -104,6 +134,22 @@ export default function RoomPage() {
       minHeight: '100vh', 
       fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
+      {/* Reconnection banner */}
+      {connectionStatus === 'disconnected' && (
+        <div style={{
+          width: '100%',
+          backgroundColor: '#fff3cd',
+          color: '#856404',
+          padding: '10px',
+          textAlign: 'center',
+          borderBottom: '1px solid #ffeeba',
+          fontSize: '14px',
+          fontWeight: 'bold'
+        }}>
+          ⚠️ Connection lost. Reconnecting...
+        </div>
+      )}
+      
       {/* Left Side - 70% */}
       <div style={{ 
         flex: '0 0 70%', 
