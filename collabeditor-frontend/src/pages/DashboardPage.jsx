@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authFetch } from '../utils/api';
 
 export default function DashboardPage() {
   const userId = localStorage.getItem('userId');
@@ -10,11 +11,8 @@ export default function DashboardPage() {
   const handleCreateRoom = async () => {
     setError('');
     try {
-      const response = await fetch('http://localhost:8080/api/rooms/create', {
+      const response = await authFetch('http://localhost:8080/api/rooms/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           name: `room-${Date.now()}`,
           createdBy: userId,
@@ -40,6 +38,7 @@ export default function DashboardPage() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('token');
     localStorage.removeItem('userId');
     localStorage.removeItem('username');
     navigate('/login');
@@ -61,3 +60,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

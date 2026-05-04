@@ -22,6 +22,7 @@ export default function LoginPage() {
 
       if (response.ok) {
         const data = await response.json();
+        localStorage.setItem('token', data.token);
         localStorage.setItem('userId', data.userId);
         localStorage.setItem('username', data.username);
         navigate('/dashboard');

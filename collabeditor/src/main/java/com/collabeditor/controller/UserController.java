@@ -21,7 +21,7 @@ public class UserController {
         String username = body.get("username");
         String password = body.get("password");
         User user = userService.registerUser(username, password);
-        Map<String, Object> response = Map.of("id", user.getId(), "username", user.getUsername());
+        Map<String, Object> response = Map.of("userId", user.getId().toString(), "username", user.getUsername());
         return ResponseEntity.ok(response);
     }
 
@@ -29,13 +29,11 @@ public class UserController {
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> body) {
         String username = body.get("username");
         String password = body.get("password");
-        Optional<User> userOpt = userService.loginUser(username, password);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            Map<String, Object> response = Map.of("success", true, "userId", user.getId(), "username", user.getUsername());
+        Map<String, Object> response = userService.loginUser(username, password);
+        if ((Boolean) response.get("success")) {
             return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.status(401).body(Map.of("success", false));
+            return ResponseEntity.status(401).body(response);
         }
     }
 }

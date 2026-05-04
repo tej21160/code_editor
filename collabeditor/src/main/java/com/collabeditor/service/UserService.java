@@ -7,6 +7,7 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -15,17 +16,22 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private JwtService jwtService;
+
     public User registerUser(String username, String password) {
         String hash = BCrypt.hashpw(password, BCrypt.gensalt());
         User user = User.builder().username(username).passwordHash(hash).createdAt(LocalDateTime.now()).build();
         return userRepository.save(user);
     }
 
-    public Optional<User> loginUser(String username, String password) {
+    public Map<String, Object> loginUser(String username, String password) {
         Optional<User> userOpt = userRepository.findByUsername(username);
         if (userOpt.isPresent() && BCrypt.checkpw(password, userOpt.get().getPasswordHash())) {
-            return userOpt;
+            User user = userOpt.get();
+            String token = jwtService.generateToken(user.getId().toString(), user.getUsername());
+            return Map.of("userId", user.getId().toString(), "username", user.getUsername(), "success", true, "token", token);
         }
-        return Optional.empty();
+        return Map.of("success", false);
     }
 }

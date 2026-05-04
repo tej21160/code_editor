@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { connectToRoom, sendCodeChange, disconnectFromRoom } from '../services/websocket';
 import CodeEditor from '../components/CodeEditor';
+import { authFetch } from '../utils/api';
 
 export default function RoomPage() {
   const { roomId } = useParams();
@@ -15,6 +16,8 @@ export default function RoomPage() {
   const [connectedUsers, setConnectedUsers] = useState([]);
   const [typingUsers, setTypingUsers] = useState([]);
   const [copySuccess, setCopySuccess] = useState('');
+  const [showHistory, setShowHistory] = useState(false);
+  const [snapshots, setSnapshots] = useState([]);
   const typingTimeouts = useRef({});
   const usersRef = useRef(new Map()); // userId -> username
 
@@ -31,7 +34,7 @@ export default function RoomPage() {
 
   useEffect(() => {
     // Fetch existing code snapshot before connecting
-    fetch(`http://localhost:8080/api/room-state/${roomId}/code`)
+    authFetch(`http://localhost:8080/api/room-state/${roomId}/code`)
       .then(res => res.json())
       .then(data => {
         if (data.code && data.code.length > 0) {
@@ -41,7 +44,7 @@ export default function RoomPage() {
       .catch(err => console.log('No existing code:', err));
 
     // Fetch existing users in the room
-    fetch(`http://localhost:8080/api/room-state/${roomId}/users`)
+    authFetch(`http://localhost:8080/api/room-state/${roomId}/users`)
       .then(res => res.json())
       .then(data => {
         if (data && Object.keys(data).length > 0) {
@@ -122,6 +125,28 @@ export default function RoomPage() {
     // Send code change via WebSocket
     const version = Date.now();
     sendCodeChange(roomId, userId, username, value, version);
+  };
+
+  const handleHistoryClick = async () => {
+    try {
+      const response = await authFetch(`http://localhost:8080/api/room-state/${roomId}/history`);
+      const data = await response.json();
+      setSnapshots(data || []);
+      setShowHistory(!showHistory);
+    } catch (err) {
+      console.error('Failed to fetch history:', err);
+    }
+  };
+
+  const handleRestoreSnapshot = (snapshot) => {
+    setCode(snapshot.content);
+    const version = Date.now();
+    sendCodeChange(roomId, userId, username, snapshot.content, version);
+    setShowHistory(false);
+  };
+
+  const handleCloseHistory = () => {
+    setShowHistory(false);
   };
 
   const handleLeaveRoom = () => {
@@ -241,11 +266,114 @@ export default function RoomPage() {
           </select>
         </div>
 
+        <div style={{ marginBottom: '10px' }}>
+          <button
+            onClick={handleHistoryClick}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            📜 History
+          </button>
+        </div>
         <CodeEditor 
           code={code} 
           onChange={handleCodeChange}
           language={selectedLanguage}
         />
+        {showHistory && (
+          <div style={{
+            position: 'absolute',
+            top: '20px',
+            right: '20px',
+            bottom: '20px',
+            width: '320px',
+            backgroundColor: '#fff',
+            border: '1px solid #dee2e6',
+            borderRadius: '8px',
+            padding: '20px',
+            zIndex: 1000,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '15px',
+              paddingBottom: '10px',
+              borderBottom: '1px solid #dee2e6'
+            }}>
+              <h3 style={{ margin: 0, fontSize: '18px', color: '#495057' }}>📜 Snapshot History</h3>
+              <button
+                onClick={handleCloseHistory}
+                style={{
+                  padding: '6px 12px',
+                  backgroundColor: '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                Close
+              </button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              {snapshots.length === 0 ? (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#6c757d' }}>
+                  No snapshots found
+                </div>
+              ) : (
+                snapshots.map((s, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      padding: '12px',
+                      marginBottom: '10px',
+                      backgroundColor: '#f8f9fa',
+                      border: '1px solid #e9ecef',
+                      borderRadius: '6px'
+                    }}
+                  >
+                    <div style={{ fontSize: '12px', color: '#6c757d', marginBottom: '6px' }}>
+                      Version: {s.version}
+                    </div>
+                    <div style={{ fontSize: '12px', marginBottom: '8px' }}>
+                      {new Date(s.savedAt).toLocaleString()}
+                    </div>
+                    <button
+                      onClick={() => handleRestoreSnapshot(s)}
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#198754',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        width: '100%'
+                      }}
+                    >
+                      Restore
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
 
         {typingUsers.length > 0 && (
           <div style={{

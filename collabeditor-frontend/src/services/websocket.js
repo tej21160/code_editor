@@ -6,6 +6,9 @@ let stompClient = null;
 export const connectToRoom = (roomId, userId, username, onMessageReceived, onConnected, onDisconnected) => {
   stompClient = new Client({
     webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+    connectHeaders: {
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    },
     reconnectDelay: 5000,
     heartbeatIncoming: 4000,
     heartbeatOutgoing: 4000,
