@@ -1,11 +1,14 @@
 package com.collabeditor.controller;
 
+import com.collabeditor.entity.CodeSnapshot;
 import com.collabeditor.service.RedisRoomService;
+import com.collabeditor.service.SnapshotService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -14,6 +17,9 @@ public class RoomStateController {
     
     @Autowired
     private RedisRoomService redisRoomService;
+    
+    @Autowired
+    private SnapshotService snapshotService;
     
     // GET /api/room-state/{roomId}/users
     // Returns all currently connected users in the room
@@ -31,5 +37,13 @@ public class RoomStateController {
         Map<String, String> response = new HashMap<>();
         response.put("code", code != null ? code : "");
         return ResponseEntity.ok(response);
+    }
+    
+    // GET /api/room-state/{roomId}/history
+    // Returns the snapshot history for the room
+    @GetMapping("/{roomId}/history")
+    public ResponseEntity<List<CodeSnapshot>> getRoomHistory(@PathVariable String roomId) {
+        List<CodeSnapshot> history = snapshotService.getSnapshotHistory(roomId);
+        return ResponseEntity.ok(history);
     }
 }

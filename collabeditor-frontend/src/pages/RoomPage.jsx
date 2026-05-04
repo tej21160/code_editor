@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { connectToRoom, sendCodeChange, disconnectFromRoom } from '../services/websocket';
+import CodeEditor from '../components/CodeEditor';
 
 export default function RoomPage() {
   const { roomId } = useParams();
@@ -9,6 +10,7 @@ export default function RoomPage() {
   const navigate = useNavigate();
 
   const [code, setCode] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState('javascript');
   const [connectionStatus, setConnectionStatus] = useState('connecting');
   const [connectedUsers, setConnectedUsers] = useState([]);
   const [typingUsers, setTypingUsers] = useState([]);
@@ -114,13 +116,12 @@ export default function RoomPage() {
     };
   }, [roomId, userId, username]);
 
-  const handleCodeChange = (e) => {
-    const newCode = e.target.value;
-    setCode(newCode);
+  const handleCodeChange = (value) => {
+    setCode(value);
     
     // Send code change via WebSocket
     const version = Date.now();
-    sendCodeChange(roomId, userId, username, newCode, version);
+    sendCodeChange(roomId, userId, username, value, version);
   };
 
   const handleLeaveRoom = () => {
@@ -220,26 +221,30 @@ export default function RoomPage() {
           </div>
         </div>
 
-        <textarea
-          value={code}
+        <div style={{ marginBottom: '20px' }}>
+          <select 
+            value={selectedLanguage} 
+            onChange={e => setSelectedLanguage(e.target.value)}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '4px',
+              border: '1px solid #333',
+              backgroundColor: '#2d2d2d',
+              color: '#d4d4d4',
+              fontSize: '14px',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="javascript">JavaScript</option>
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+          </select>
+        </div>
+
+        <CodeEditor 
+          code={code} 
           onChange={handleCodeChange}
-          placeholder="Start typing code here..."
-          style={{
-            width: '100%',
-            minHeight: '400px',
-            height: '60vh',
-            fontFamily: 'monospace',
-            fontSize: '14px',
-            padding: '15px',
-            border: '1px solid #ccc',
-            borderRadius: '8px',
-            resize: 'vertical',
-            boxSizing: 'border-box',
-            backgroundColor: '#1e1e1e',
-            color: '#d4d4d4',
-            lineHeight: '1.5',
-            caretColor: 'white'
-          }}
+          language={selectedLanguage}
         />
 
         {typingUsers.length > 0 && (

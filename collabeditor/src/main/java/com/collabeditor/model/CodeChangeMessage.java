@@ -15,4 +15,5 @@ public class CodeChangeMessage {
     private String content;
     private Long version;
     private LocalDateTime timestamp;
+    private Operation operation;
 }
