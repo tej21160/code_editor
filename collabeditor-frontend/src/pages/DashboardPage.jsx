@@ -11,7 +11,7 @@ export default function DashboardPage() {
   const handleCreateRoom = async () => {
     setError('');
     try {
-      const response = await authFetch('http://localhost:8080/api/rooms/create', {
+      const response = await authFetch('/api/rooms/create', {
         method: 'POST',
         body: JSON.stringify({
           name: `room-${Date.now()}`,
