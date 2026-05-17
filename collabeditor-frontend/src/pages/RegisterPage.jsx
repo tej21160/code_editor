@@ -12,7 +12,7 @@ export default function RegisterPage() {
     setError('');
     
     try {
-      const response = await fetch('http://localhost:8080/api/users/register', {
+      const response = await fetch('https://codeeditor-production-f2d2.up.railway.app/api/users/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

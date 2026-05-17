@@ -11,7 +11,7 @@ export default function DashboardPage() {
   const handleCreateRoom = async () => {
     setError('');
     try {
-      const response = await authFetch('/api/rooms/create', {
+      const response = await authFetch('https://codeeditor-production-f2d2.up.railway.app/api/rooms/create', {
         method: 'POST',
         body: JSON.stringify({
           name: `room-${Date.now()}`,

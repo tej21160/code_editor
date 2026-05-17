@@ -34,7 +34,7 @@ export default function RoomPage() {
 
   useEffect(() => {
     // Fetch existing code snapshot before connecting
-    authFetch(`/api/room-state/${roomId}/code`)
+    authFetch(`https://codeeditor-production-f2d2.up.railway.app/api/room-state/${roomId}/code`)
       .then(res => res.json())
       .then(data => {
         if (data.code && data.code.length > 0) {
@@ -44,7 +44,7 @@ export default function RoomPage() {
       .catch(err => console.log('No existing code:', err));
 
     // Fetch existing users in the room
-    authFetch(`/api/room-state/${roomId}/users`)
+    authFetch(`https://codeeditor-production-f2d2.up.railway.app/api/room-state/${roomId}/users`)
       .then(res => res.json())
       .then(data => {
         if (data && Object.keys(data).length > 0) {
@@ -129,7 +129,7 @@ export default function RoomPage() {
 
   const handleHistoryClick = async () => {
     try {
-      const response = await authFetch(`/api/room-state/${roomId}/history`);
+      const response = await authFetch(`https://codeeditor-production-f2d2.up.railway.app/api/room-state/${roomId}/history`);
       const data = await response.json();
       setSnapshots(data || []);
       setShowHistory(!showHistory);
