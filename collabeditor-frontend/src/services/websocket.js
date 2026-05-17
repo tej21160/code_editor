@@ -4,7 +4,7 @@ import SockJS from 'sockjs-client';
 let stompClient = null;
 
 export const connectToRoom = (roomId, userId, username, onMessageReceived, onConnected, onDisconnected) => {
-  const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:8080';
+  const WS_URL = import.meta.env.VITE_WS_URL || 'https://codeeditor-production-f2d2.up.railway.app';
   stompClient = new Client({
     webSocketFactory: () => new SockJS(`${WS_URL}/ws`),
     connectHeaders: {
